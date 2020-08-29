@@ -1,6 +1,7 @@
+import numpy as np
 import taichi as ti
 import taichi_glsl as ts
-import numpy as np
+
 
 ti.init()
 
@@ -11,16 +12,29 @@ class JumpFlooding:
         self.w = width
         self.h = height
         self.max_num_seed = max_num_seed
-        self.num_seed = ti.var(ti.i32, shape=())
-        self.pixels = ti.var(ti.i32)
-        self.seeds = ti.var(ti.i32)
+        self.num_seed = ti.field(ti.i32, shape=())
+        self.pixels = ti.field(ti.i32)
+        self.seeds = ti.field(ti.i32)
+        self.centroids = ti.field(ti.i32)
         ti.root.dense(ti.ij, (self.w, self.h)).place(self.pixels)
         ti.root.dense(ti.ij, (self.max_num_seed, 2)).place(self.seeds)
+        ti.root.dense(ti.ij, (self.max_num_seed, 2)).place(self.centroids)
+
+    # assign seeds through numpy array
+    @ti.kernel
+    def assign_seeds(self, seeds: ti.template(), seeds_len: ti.i32):
+        self.num_seed[None] = seeds_len
+        for I in ti.grouped(seeds):
+            self.seeds[I] = seeds[I]
+
+    @ti.kernel
+    def compute_regional_centroids(self):
+        assert 0
 
     @ti.kernel
     def init_seed(self):
         for i, j in self.pixels:
-            self.pixels[i, j] = -1
+            self.pixels[i, j] = -1  # -1 represent empty pixel
         for i in range(self.num_seed[None]):
             self.pixels[self.seeds[i, 0], self.seeds[i, 1]] = i
 
@@ -69,10 +83,6 @@ class JumpFlooding:
         self.seeds[new_seed_id, 1] = max(0, min(self.h, y))
         self.num_seed[None] += 1
         self.init_seed()
-
-    # TODO : generate certain number of seeds
-    # @ti.kernel
-    # def random_add_seeds(self, num: ti.i32):
 
     def solve(self):
         step_x = self.w // 2
