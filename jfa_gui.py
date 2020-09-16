@@ -10,6 +10,7 @@ h = 321
 screen = ti.Vector(3, dt=ti.f32, shape=(w, h))
 
 jfa = JumpFlooding(w, h, 1000)
+jfa.compute_regional_centroids()
 
 gui = ti.GUI("JFA", res=(w, h))
 seed_render = False
