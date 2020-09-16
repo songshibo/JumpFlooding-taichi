@@ -15,10 +15,11 @@ class JumpFlooding:
         self.num_seed = ti.field(ti.i32, shape=())
         self.pixels = ti.field(ti.i32)
         self.seeds = ti.field(ti.i32)
-        self.centroids = ti.field(ti.i32)
+        self.centroids = ti.field(ti.f32)
         ti.root.dense(ti.ij, (self.w, self.h)).place(self.pixels)
         ti.root.dense(ti.ij, (self.max_num_seed, 2)).place(self.seeds)
-        ti.root.dense(ti.ij, (self.max_num_seed, 2)).place(self.centroids)
+        ti.root.dense(ti.ij, (self.max_num_seed, 3)).place(
+            self.centroids)  # x,y are numerator and z is denominator
 
     # assign seeds through numpy array
     @ti.kernel
@@ -29,7 +30,12 @@ class JumpFlooding:
 
     @ti.kernel
     def compute_regional_centroids(self):
-        assert 0
+        # reset all centroids
+        for i in range(self.num_seed[None]):
+            for j in ti.static(range(3)):
+                self.centroids[i, j] = 0
+        # calculate centroids
+        for i, j in self.pixels:
 
     @ti.kernel
     def init_seed(self):
