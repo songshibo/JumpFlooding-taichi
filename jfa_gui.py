@@ -5,8 +5,8 @@ from JFA import JumpFlooding
 
 ti.init(arch=ti.gpu)
 
-w = 481
-h = 321
+w = 1024
+h = 720
 screen = ti.Vector(3, dt=ti.f32, shape=(w, h))
 
 jfa = JumpFlooding(w, h, 1000)
