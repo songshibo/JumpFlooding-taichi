@@ -12,34 +12,17 @@ np_seeds = np.array([[0.1, 0.8], [0.25, 0.34], [0.64, 0.78],
                      [0.89, 0.1], [0.75, 0.12], [0.56, 0.69]], dtype=np.float32)
 seeds = ti.field(ti.f32)
 ti.root.dense(ti.ij, np_seeds.shape).place(seeds)
-
 jfa = JumpFlooding(w, h, 1000)
 
-# assign data from numpy
+# assign data from numpy(make sure any data from numpy is put here)
 seeds.from_numpy(np_seeds)
 
-# jfa.assign_seeds(seeds, np_seeds.shape[0])
-# jfa.init_seed()
-# jfa.solve()
-# jfa.compute_regional_centroids()
+jfa.assign_seeds(seeds, np_seeds.shape[0])
+jfa.init_seed()
+jfa.solve()
+jfa.compute_regional_centroids()
 
 gui = ti.GUI("JFA", res=(w, h))
-# * Lloyd's algorithm in 2D
-# while gui.running:
-#     for e in gui.get_events(ti.GUI.PRESS):
-#         if e.key == ti.GUI.ESCAPE:
-#             exit()
-#         elif e.key == ti.GUI.SPACE:
-#             jfa.assign_seeds_from_controids()
-#             jfa.init_seed()
-#             jfa.solve()
-#             jfa.compute_regional_centroids()
-
-#     gui.set_image(screen)
-#     jfa.render_color(screen)
-#     gui.circles(jfa.output_seeds(), color=0xffaa77, radius=5)
-#     gui.circles(jfa.output_centroids(), color=0x427bf5, radius=5)
-#     gui.show()
 
 # * interactive ui
 seed_render = False
@@ -55,9 +38,11 @@ while gui.running:
         elif e.key == 'r':
             render_type = 0 if render_type == 1 else 1
         elif e.key == ti.GUI.SPACE:
-            jfa.assign_seeds_from_controids()
+            jfa.assign_seeds_from_centroids()
             jfa.init_seed()
             jfa.solve()
+        elif e.key == 'l':
+            jfa.solve_cvt_Lloyd()
 
     t0 = time.time()
     jfa.solve()

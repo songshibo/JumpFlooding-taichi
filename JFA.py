@@ -21,36 +21,14 @@ class JumpFlooding:
         ti.root.dense(ti.ij, (self.max_num_seed, 3)).place(
             self.centroids)  # x,y are numerator and z is denominator
 
-    # assign seeds through numpy array
+    # * assign seeds through numpy array
     @ti.kernel
     def assign_seeds(self, seeds: ti.template(), seeds_len: ti.i32):
         self.num_seed[None] = seeds_len
         for I in ti.grouped(seeds):
             self.seeds[I] = seeds[I]
 
-    @ti.kernel
-    def compute_regional_centroids(self):
-        # reset all centroids
-        for i in range(self.num_seed[None]):
-            for j in ti.static(range(3)):
-                self.centroids[i, j] = 0
-        # calculate centroids
-        for i, j in self.pixels:
-            index = self.pixels[i, j]
-            self.centroids[index, 0] += i / self.w
-            self.centroids[index, 1] += j / self.h
-            self.centroids[index, 2] += 1.0
-
-        for i in range(self.num_seed[None]):
-            self.centroids[i, 0] /= self.centroids[i, 2]
-            self.centroids[i, 1] /= self.centroids[i, 2]
-
-    @ti.kernel
-    def assign_seeds_from_controids(self):
-        for i in range(self.num_seed[None]):
-            self.seeds[i, 0] = self.centroids[i, 0]
-            self.seeds[i, 1] = self.centroids[i, 1]
-
+    # * initialize seed to pixels
     @ti.kernel
     def init_seed(self):
         for i, j in self.pixels:
@@ -60,6 +38,23 @@ class JumpFlooding:
             y = ti.cast(self.seeds[i, 1] * self.h, ti.i32)
             self.pixels[x, y] = i
 
+    # * assign seeds to the centroids of it current region
+    @ti.kernel
+    def assign_seeds_from_centroids(self):
+        for i in range(self.num_seed[None]):
+            self.seeds[i, 0] = self.centroids[i, 0]
+            self.seeds[i, 1] = self.centroids[i, 1]
+
+    # * add single seed
+    def add_seed(self, x: ti.f32, y: ti.f32):
+        new_seed_id = self.num_seed[None]
+        assert new_seed_id != self.max_num_seed
+        self.seeds[new_seed_id, 0] = max(0.0, min(x, 1.0))
+        self.seeds[new_seed_id, 1] = max(0.0, min(y, 1.0))
+        self.num_seed[None] += 1
+        self.init_seed()
+
+    # * each step of JFA
     @ti.kernel
     def jfa_step(self, step_x: ti.i32, step_y: ti.i32):
         for i, j in self.pixels:
@@ -81,18 +76,63 @@ class JumpFlooding:
                                 min_index = self.pixels[ix, jy]
             self.pixels[i, j] = min_index
 
+    # * Solve JFA
+    def solve(self):
+        step_x = self.w // 2
+        step_y = self.h // 2
+        while True:
+            self.jfa_step(step_x, step_y)
+            step_x = step_x // 2
+            step_y = step_y // 2
+            if step_x == 0 and step_y == 0:
+                break
+            else:
+                step_x = 1 if step_x < 1 else step_x
+                step_y = 1 if step_y < 1 else step_y
+        self.jfa_step(1, 1)
+
+    # * calculate centroids of each seed region(density=1)
+    @ti.kernel
+    def compute_regional_centroids(self):
+        # reset all centroids
+        for i in range(self.num_seed[None]):
+            for j in ti.static(range(3)):
+                self.centroids[i, j] = 0
+        # calculate centroids
+        for i, j in self.pixels:
+            index = self.pixels[i, j]
+            self.centroids[index, 0] += i / self.w
+            self.centroids[index, 1] += j / self.h
+            self.centroids[index, 2] += 1.0
+
+        for i in range(self.num_seed[None]):
+            self.centroids[i, 0] /= self.centroids[i, 2]
+            self.centroids[i, 1] /= self.centroids[i, 2]
+
+    @ti.kernel
+    def should_cvt_end(self) -> ti.i32:
+        result = 1
+        for i in range(self.num_seed[None]):
+            dist = ts.distance(ti.Vector([self.seeds[i, 0], self.seeds[i, 1]]), ti.Vector(
+                [self.centroids[i, 0], self.centroids[i, 1]]))
+            print(dist)
+            if(dist > 1e-3):
+                result = 0
+        return result
+
+    # * solve CVT (Lloyd's algorithm in 2D)
+    def solve_cvt_Lloyd(self):
+        print(self.should_cvt_end())
+        while self.should_cvt_end() == 0:
+            self.compute_regional_centroids()
+            self.assign_seeds_from_centroids()
+            self.init_seed()
+            self.solve()
+
     @ti.kernel
     def render_color(self, screen: ti.template()):
         for I in ti.grouped(screen):
             screen[I].fill(self.pixels[I] / self.num_seed[None])
-
-    @ti.kernel
-    def debug_seed(self, screen: ti.template()):
-        for I in ti.grouped(screen):
-            if self.pixels[I] == -1:
-                screen[I].fill(1.0)
-            else:
-                screen[I].fill(0.0)
 
     @ti.kernel
     def render_distance(self, screen: ti.template()):
@@ -110,25 +150,3 @@ class JumpFlooding:
     def output_centroids(self):
         centroid_np = self.centroids.to_numpy()
         return centroid_np[:self.num_seed[None], :2]
-
-    def add_seed(self, x: ti.f32, y: ti.f32):
-        new_seed_id = self.num_seed[None]
-        assert new_seed_id != self.max_num_seed
-        self.seeds[new_seed_id, 0] = max(0.0, min(x, 1.0))
-        self.seeds[new_seed_id, 1] = max(0.0, min(y, 1.0))
-        self.num_seed[None] += 1
-        self.init_seed()
-
-    def solve(self):
-        step_x = self.w // 2
-        step_y = self.h // 2
-        while True:
-            self.jfa_step(step_x, step_y)
-            step_x = step_x // 2
-            step_y = step_y // 2
-            if step_x == 0 and step_y == 0:
-                break
-            else:
-                step_x = 1 if step_x < 1 else step_x
-                step_y = 1 if step_y < 1 else step_y
-        self.jfa_step(1, 1)
