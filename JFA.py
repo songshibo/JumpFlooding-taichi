@@ -14,7 +14,7 @@ class JumpFlooding:
         self.max_num_seed = max_num_seed
         self.num_seed = ti.field(ti.i32, shape=())  # number of active seed
         self.pixels = ti.field(ti.i32)  # current 2D pixels, store seed index
-        self.seeds = ti.field(ti.i32)  # seed array
+        self.seeds = ti.field(ti.f32)  # seed array (in range(0-1))
         self.centroids = ti.field(ti.f32)  # centroid of each seed's region
         ti.root.dense(ti.ij, (self.w, self.h)).place(self.pixels)
         ti.root.dense(ti.ij, (self.max_num_seed, 2)).place(self.seeds)
@@ -37,8 +37,8 @@ class JumpFlooding:
         # calculate centroids
         for i, j in self.pixels:
             index = self.pixels[i, j]
-            self.centroids[index, 0] += ti.cast(i, ti.f32)
-            self.centroids[index, 1] += ti.cast(j, ti.f32)
+            self.centroids[index, 0] += i / self.w
+            self.centroids[index, 1] += j / self.h
             self.centroids[index, 2] += 1.0
 
         for i in range(self.num_seed[None]):
@@ -48,15 +48,17 @@ class JumpFlooding:
     @ti.kernel
     def assign_seeds_from_controids(self):
         for i in range(self.num_seed[None]):
-            self.seeds[i, 0] = ti.cast(self.centroids[i, 0], ti.i32)
-            self.seeds[i, 1] = ti.cast(self.centroids[i, 1], ti.i32)
+            self.seeds[i, 0] = self.centroids[i, 0]
+            self.seeds[i, 1] = self.centroids[i, 1]
 
     @ti.kernel
     def init_seed(self):
         for i, j in self.pixels:
             self.pixels[i, j] = -1  # -1 represent empty pixel
         for i in range(self.num_seed[None]):
-            self.pixels[self.seeds[i, 0], self.seeds[i, 1]] = i
+            x = ti.cast(self.seeds[i, 0] * self.w, ti.i32)
+            y = ti.cast(self.seeds[i, 1] * self.h, ti.i32)
+            self.pixels[x, y] = i
 
     @ti.kernel
     def jfa_step(self, step_x: ti.i32, step_y: ti.i32):
@@ -73,7 +75,7 @@ class JumpFlooding:
                             seed_coord = ti.Vector(
                                 [self.seeds[index, 0], self.seeds[index, 1]])
                             dist = ts.distance(
-                                ti.Vector([i, j]), seed_coord)
+                                ti.Vector([i / self.w, j / self.h]), seed_coord)
                             if dist < min_distance:
                                 min_distance = dist
                                 min_index = self.pixels[ix, jy]
@@ -85,26 +87,35 @@ class JumpFlooding:
             screen[I].fill(self.pixels[I] / self.num_seed[None])
 
     @ti.kernel
+    def debug_seed(self, screen: ti.template()):
+        for I in ti.grouped(screen):
+            if self.pixels[I] == -1:
+                screen[I].fill(1.0)
+            else:
+                screen[I].fill(0.0)
+
+    @ti.kernel
     def render_distance(self, screen: ti.template()):
         for I in ti.grouped(screen):
             seed = ti.Vector(
                 [self.seeds[self.pixels[I], 0], self.seeds[self.pixels[I], 1]])
-            screen[I].fill(ts.distance(I, seed) /
-                           ti.sqrt(pow(self.w, 2)+pow(self.h, 2)))
+            pos = ti.Vector([I[0] / self.w, I[1] / self.h])
+            screen[I].fill(ts.distance(pos, seed) /
+                           ti.sqrt(2.0))
 
     def output_seeds(self):
         seed_np = self.seeds.to_numpy()
-        return seed_np[:self.num_seed[None]] / np.array([self.w, self.h])
+        return seed_np[:self.num_seed[None]]
 
     def output_centroids(self):
         centroid_np = self.centroids.to_numpy()
-        return centroid_np[:self.num_seed[None], :2] / np.array([self.w, self.h])
+        return centroid_np[:self.num_seed[None], :2]
 
-    def add_seed(self, x: ti.i32, y: ti.i32):
+    def add_seed(self, x: ti.f32, y: ti.f32):
         new_seed_id = self.num_seed[None]
         assert new_seed_id != self.max_num_seed
-        self.seeds[new_seed_id, 0] = max(0, min(self.w, x))
-        self.seeds[new_seed_id, 1] = max(0, min(self.h, y))
+        self.seeds[new_seed_id, 0] = max(0.0, min(x, 1.0))
+        self.seeds[new_seed_id, 1] = max(0.0, min(y, 1.0))
         self.num_seed[None] += 1
         self.init_seed()
 
