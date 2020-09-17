@@ -12,10 +12,10 @@ class JumpFlooding:
         self.w = width
         self.h = height
         self.max_num_seed = max_num_seed
-        self.num_seed = ti.field(ti.i32, shape=())
-        self.pixels = ti.field(ti.i32)
-        self.seeds = ti.field(ti.i32)
-        self.centroids = ti.field(ti.f32)
+        self.num_seed = ti.field(ti.i32, shape=())  # number of active seed
+        self.pixels = ti.field(ti.i32)  # current 2D pixels, store seed index
+        self.seeds = ti.field(ti.i32)  # seed array
+        self.centroids = ti.field(ti.f32)  # centroid of each seed's region
         ti.root.dense(ti.ij, (self.w, self.h)).place(self.pixels)
         ti.root.dense(ti.ij, (self.max_num_seed, 2)).place(self.seeds)
         ti.root.dense(ti.ij, (self.max_num_seed, 3)).place(
@@ -36,6 +36,20 @@ class JumpFlooding:
                 self.centroids[i, j] = 0
         # calculate centroids
         for i, j in self.pixels:
+            index = self.pixels[i, j]
+            self.centroids[index, 0] += ti.cast(i, ti.f32)
+            self.centroids[index, 1] += ti.cast(j, ti.f32)
+            self.centroids[index, 2] += 1.0
+
+        for i in range(self.num_seed[None]):
+            self.centroids[i, 0] /= self.centroids[i, 2]
+            self.centroids[i, 1] /= self.centroids[i, 2]
+
+    @ti.kernel
+    def assign_seeds_from_controids(self):
+        for i in range(self.num_seed[None]):
+            self.seeds[i, 0] = ti.cast(self.centroids[i, 0], ti.i32)
+            self.seeds[i, 1] = ti.cast(self.centroids[i, 1], ti.i32)
 
     @ti.kernel
     def init_seed(self):
@@ -81,6 +95,10 @@ class JumpFlooding:
     def output_seeds(self):
         seed_np = self.seeds.to_numpy()
         return seed_np[:self.num_seed[None]] / np.array([self.w, self.h])
+
+    def output_centroids(self):
+        centroid_np = self.centroids.to_numpy()
+        return centroid_np[:self.num_seed[None], :2] / np.array([self.w, self.h])
 
     def add_seed(self, x: ti.i32, y: ti.i32):
         new_seed_id = self.num_seed[None]
