@@ -5,29 +5,26 @@ from JFA import JumpFlooding
 
 ti.init(arch=ti.gpu, debug=True)
 
-w = 600
-h = 400
+w = 512
+h = 512
 screen = ti.Vector(3, dt=ti.f32, shape=(w, h))
-np_seeds = np.array([[0.1, 0.8], [0.25, 0.34], [0.64, 0.78],
-                     [0.89, 0.1], [0.75, 0.12], [0.56, 0.69]], dtype=np.float32)
+np_seeds = np.array(np.random.rand(30, 2), dtype=np.float32)
 seeds = ti.field(ti.f32)
 ti.root.dense(ti.ij, np_seeds.shape).place(seeds)
-jfa = JumpFlooding(w, h, 1000)
+jfa = JumpFlooding(w, h, 1500)
 
 # assign data from numpy(make sure any data from numpy is put here)
 seeds.from_numpy(np_seeds)
 
 jfa.assign_seeds(seeds, np_seeds.shape[0])
 jfa.init_seed()
-jfa.solve()
-jfa.compute_regional_centroids()
 
 gui = ti.GUI("JFA", res=(w, h))
 
 # * interactive ui
-seed_render = True
-render_type = 0
-auto_cvt_lloyd = False
+seed_render = True  # render seed toggle
+render_type = 0  # 0: graysacle render/ other: distance render
+auto_cvt_lloyd = False  # perform lloyd algorithm each frame
 while gui.running:
     for e in gui.get_events(ti.GUI.PRESS):
         if e.key == ti.GUI.ESCAPE:

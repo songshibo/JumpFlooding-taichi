@@ -45,12 +45,12 @@ class JumpFlooding:
             self.seeds[i, 0] = self.centroids[i, 0]
             self.seeds[i, 1] = self.centroids[i, 1]
 
-    # * add single seed
+    # * add single seed, seed coords has been clamped to 0-1
     def add_seed(self, x: ti.f32, y: ti.f32):
         new_seed_id = self.num_seed[None]
         assert new_seed_id != self.max_num_seed
-        self.seeds[new_seed_id, 0] = max(0.0, min(x, 1.0))
-        self.seeds[new_seed_id, 1] = max(0.0, min(y, 1.0))
+        self.seeds[new_seed_id, 0] = min(max(x, 0.0), 1.0)
+        self.seeds[new_seed_id, 1] = min(max(y, 0.0), 1.0)
         self.num_seed[None] += 1
         self.init_seed()
 
@@ -80,6 +80,8 @@ class JumpFlooding:
     def solve(self):
         step_x = self.w // 2
         step_y = self.h // 2
+        # step_x = int(np.power(2, np.ceil(np.log(self.w))))
+        # step_y = int(np.power(2, np.ceil(np.log(self.h))))
         while True:
             self.jfa_step(step_x, step_y)
             step_x = step_x // 2
@@ -92,7 +94,7 @@ class JumpFlooding:
         self.jfa_step(1, 1)
 
     # * calculate centroids of each seed region(density=1)
-    @ti.kernel
+    @ ti.kernel
     def compute_regional_centroids(self):
         # reset all centroids
         for i in range(self.num_seed[None]):
@@ -109,36 +111,22 @@ class JumpFlooding:
             self.centroids[i, 0] /= self.centroids[i, 2]
             self.centroids[i, 1] /= self.centroids[i, 2]
 
-    @ti.kernel
+    @ ti.kernel
     def should_cvt_end(self) -> ti.i32:
         end_flag = 1
         for i in range(self.num_seed[None]):
             dist = ts.distance(ti.Vector([self.seeds[i, 0], self.seeds[i, 1]]), ti.Vector(
                 [self.centroids[i, 0], self.centroids[i, 1]]))
-            if(dist > 1e-3):
+            if(dist > 1e-5):
                 end_flag = 0
         return end_flag
 
-    # * solve CVT (Lloyd's algorithm in 2D)
-    def solve_cvt_Lloyd(self):
-        iteration = 0
-        self.init_seed()
-        self.solve()
-        self.compute_regional_centroids()
-        while self.should_cvt_end() == 0:
-            self.assign_seeds_from_centroids()
-            self.init_seed()
-            self.solve()
-            self.compute_regional_centroids()
-            iteration += 1
-        print("Lloyd CVT iteration times:" + str(iteration))
-
-    @ti.kernel
+    @ ti.kernel
     def render_color(self, screen: ti.template()):
         for I in ti.grouped(screen):
             screen[I].fill(self.pixels[I] / self.num_seed[None])
 
-    @ti.kernel
+    @ ti.kernel
     def render_distance(self, screen: ti.template()):
         for I in ti.grouped(screen):
             seed = ti.Vector(
