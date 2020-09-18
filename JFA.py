@@ -111,23 +111,27 @@ class JumpFlooding:
 
     @ti.kernel
     def should_cvt_end(self) -> ti.i32:
-        result = 1
+        end_flag = 1
         for i in range(self.num_seed[None]):
             dist = ts.distance(ti.Vector([self.seeds[i, 0], self.seeds[i, 1]]), ti.Vector(
                 [self.centroids[i, 0], self.centroids[i, 1]]))
-            print(dist)
             if(dist > 1e-3):
-                result = 0
-        return result
+                end_flag = 0
+        return end_flag
 
     # * solve CVT (Lloyd's algorithm in 2D)
     def solve_cvt_Lloyd(self):
-        print(self.should_cvt_end())
+        iteration = 0
+        self.init_seed()
+        self.solve()
+        self.compute_regional_centroids()
         while self.should_cvt_end() == 0:
-            self.compute_regional_centroids()
             self.assign_seeds_from_centroids()
             self.init_seed()
             self.solve()
+            self.compute_regional_centroids()
+            iteration += 1
+        print("Lloyd CVT iteration times:" + str(iteration))
 
     @ti.kernel
     def render_color(self, screen: ti.template()):
