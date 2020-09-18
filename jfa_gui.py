@@ -63,4 +63,8 @@ while gui.running:
 
     gui.text(str(round(1000*(t1-t0), 2)) + " ms",
              [0, 1], font_size=15, color=0x4181dd)
+    gui.text("centroids",
+             [0, 0.96], font_size=12, color=0x427bf5)
+    gui.text("seeds",
+             [0, 0.93], font_size=12, color=0xffaa77)
     gui.show()
