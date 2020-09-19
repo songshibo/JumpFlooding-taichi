@@ -18,8 +18,8 @@ class JumpFlooding:
         self.centroids = ti.field(ti.f32)  # centroid of each seed's region
         ti.root.dense(ti.ij, (self.w, self.h)).place(self.pixels)
         ti.root.dense(ti.ij, (self.max_num_seed, 2)).place(self.seeds)
-        ti.root.dense(ti.ij, (self.max_num_seed, 3)).place(
-            self.centroids)  # x,y are numerator and z is denominator
+        ti.root.dense(ti.ij, (self.max_num_seed, 4)).place(
+            self.centroids)  # x,y are numerator, z is denominator and w is the avg distance
 
     # * assign seeds through numpy array
     @ti.kernel
@@ -76,12 +76,11 @@ class JumpFlooding:
                                 min_index = self.pixels[ix, jy]
             self.pixels[i, j] = min_index
 
-    # * Solve JFA
-    def solve(self):
-        step_x = self.w // 2
-        step_y = self.h // 2
-        # step_x = int(np.power(2, np.ceil(np.log(self.w))))
-        # step_y = int(np.power(2, np.ceil(np.log(self.h))))
+    # * JFA with auto initial step length
+    def solve_auto(self):
+        step_x = int(np.power(2, np.ceil(np.log(self.w))))
+        step_y = int(np.power(2, np.ceil(np.log(self.h))))
+        self.jfa_step(1, 1)
         while True:
             self.jfa_step(step_x, step_y)
             step_x = step_x // 2
@@ -91,15 +90,35 @@ class JumpFlooding:
             else:
                 step_x = 1 if step_x < 1 else step_x
                 step_y = 1 if step_y < 1 else step_y
+
+    # * JFA with custom initial step length
+    def solve(self, step_x: int, step_y: int):
         self.jfa_step(1, 1)
+        while True:
+            self.jfa_step(step_x, step_y)
+            step_x = step_x // 2
+            step_y = step_y // 2
+            if step_x == 0 and step_y == 0:
+                break
+            else:
+                step_x = 1 if step_x < 1 else step_x
+                step_y = 1 if step_y < 1 else step_y
+
+    @ti.kernel
+    def check_JFA_result(self) -> ti.i32:
+        valid = 1
+        for i, j in self.pixels:
+            if self.pixels[i, j] == -1:
+                valid = 0
+        return valid
 
     # * calculate centroids of each seed region(density=1)
-    @ ti.kernel
+    @ti.kernel
     def compute_regional_centroids(self):
         # reset all centroids
         for i in range(self.num_seed[None]):
-            for j in ti.static(range(3)):
-                self.centroids[i, j] = 0
+            for j in ti.static(range(4)):
+                self.centroids[i, j] = 0.0
         # calculate centroids
         for i, j in self.pixels:
             index = self.pixels[i, j]
@@ -111,22 +130,78 @@ class JumpFlooding:
             self.centroids[i, 0] /= self.centroids[i, 2]
             self.centroids[i, 1] /= self.centroids[i, 2]
 
-    @ ti.kernel
+    # * calculate the avergae distance from each site to all the pixels in its Voronoi cell
+    @ti.kernel
+    def compute_regional_avg_distance(self):
+        for i, j in self.pixels:
+            index = self.pixels[i, j]
+            seed_coord = ti.Vector(
+                [self.seeds[index, 0], self.seeds[index, 1]])
+            pixel_coord = ti.Vector([i / self.w, j / self.h])
+            self.centroids[index, 3] += ts.distance(seed_coord, pixel_coord)
+
+        for i in range(self.num_seed[None]):
+            self.centroids[i, 3] /= self.centroids[i, 2]
+
+    # * get maximum of all average distances
+    @ti.kernel
+    def maximum_avg_distance(self) -> ti.f32:
+        max_dist = -1.0
+        for i in range(self.num_seed[None]):
+            if self.centroids[i, 3] > max_dist:
+                max_dist = self.centroids[i, 3]
+        return max_dist
+
+    @ti.kernel
     def should_cvt_end(self) -> ti.i32:
         end_flag = 1
         for i in range(self.num_seed[None]):
             dist = ts.distance(ti.Vector([self.seeds[i, 0], self.seeds[i, 1]]), ti.Vector(
                 [self.centroids[i, 0], self.centroids[i, 1]]))
-            if(dist > 1e-5):
+            if(dist > 5e-5):
                 end_flag = 0
         return end_flag
 
-    @ ti.kernel
+    # * lloyd algorithm with 1+JFA
+    def solve_cvt_lloyd(self, m=5):
+        # initial steo size is set to 2^⌈log(n)⌉
+        # first CVT iteration
+        step_x = int(np.power(2, np.ceil(np.log(self.w))))
+        step_y = int(np.power(2, np.ceil(np.log(self.h))))
+        iteration = 0
+        while True:
+            self.init_seed()
+            self.solve(step_x, step_y)
+            if self.check_JFA_result() == 0:
+                print(step_x, step_y)
+                assert False, "Pixel seed index equal to -1, may casued by bad initial JFA step size"
+            self.compute_regional_centroids()
+            if self.should_cvt_end() == 1:
+                break
+            # only for first m iteration
+            if iteration <= m:
+                self.compute_regional_avg_distance()
+                max_dist = self.maximum_avg_distance()
+                step_x = 2 * int(max_dist * self.w)
+                step_y = 2 * int(max_dist * self.h)
+            self.assign_seeds_from_centroids()
+            iteration += 1
+        print("iteration times:" + str(iteration))
+
+    @ti.kernel
     def render_color(self, screen: ti.template()):
         for I in ti.grouped(screen):
             screen[I].fill(self.pixels[I] / self.num_seed[None])
 
-    @ ti.kernel
+    @ti.kernel
+    def debug_render(self, screen: ti.template()):
+        for I in ti.grouped(screen):
+            if self.pixels[I] == -1:
+                screen[I].fill(1.0)
+            else:
+                screen[I].fill(0.0)
+
+    @ti.kernel
     def render_distance(self, screen: ti.template()):
         for I in ti.grouped(screen):
             seed = ti.Vector(
