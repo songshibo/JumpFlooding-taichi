@@ -19,7 +19,6 @@ info.from_numpy(seeds_info)
 cvt_solver.jfa.solve_jfa(step)
 cvt_solver.jfa.render_color(screen, info)
 
-
 auto_cvt_lloyd = False
 gui = ti.GUI("JFA_test", (w, h))
 while gui.running:
