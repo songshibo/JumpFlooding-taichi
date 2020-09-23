@@ -78,8 +78,8 @@ class JumpFlooding:
 
     # * JFA with auto initial step length
     def solve_auto(self):
-        step_x = int(np.power(2, np.ceil(np.log(self.w))))
-        step_y = int(np.power(2, np.ceil(np.log(self.h))))
+        step_x = int(np.power(2, np.ceil(np.log2(self.w))))
+        step_y = int(np.power(2, np.ceil(np.log2(self.h))))
         self.jfa_step(1, 1)
         while True:
             self.jfa_step(step_x, step_y)
@@ -166,8 +166,8 @@ class JumpFlooding:
     def solve_cvt_lloyd(self, m=5):
         # initial steo size is set to 2^⌈log(n)⌉
         # first CVT iteration
-        step_x = int(np.power(2, np.ceil(np.log(self.w))))
-        step_y = int(np.power(2, np.ceil(np.log(self.h))))
+        step_x = int(np.power(2, np.ceil(np.log2(self.w))))
+        step_y = int(np.power(2, np.ceil(np.log2(self.h))))
         iteration = 0
         while True:
             self.init_seed()

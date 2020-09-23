@@ -5,10 +5,10 @@ from JFA import JumpFlooding
 
 ti.init(arch=ti.gpu, debug=True, kernel_profiler=True)
 
-w = 1024
-h = 1024
+w = 512
+h = 512
 screen = ti.Vector(3, dt=ti.f32, shape=(w, h))
-np_seeds = np.array(np.random.rand(30, 2), dtype=np.float32)
+np_seeds = np.array(np.random.rand(8, 2), dtype=np.float32)
 seeds = ti.field(ti.f32)
 ti.root.dense(ti.ij, np_seeds.shape).place(seeds)
 jfa = JumpFlooding(w, h, 100)
