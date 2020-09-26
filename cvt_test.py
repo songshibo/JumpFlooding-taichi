@@ -5,8 +5,8 @@ from CVT_Lloyd import cvt_lloyd_solver
 
 ti.init(arch=ti.gpu)
 
-w = 512
-h = 512
+w = 256
+h = 256
 step = (int(np.power(2, np.ceil(np.log(w)))),
         int(np.power(2, np.ceil(np.log(h)))))
 screen = ti.Vector(3, dt=ti.f32, shape=(w, h))
