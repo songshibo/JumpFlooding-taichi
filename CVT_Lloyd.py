@@ -1,23 +1,23 @@
 import numpy as np
 import taichi as ti
 import taichi_glsl as ts
-from GPU_JFA import jfa_solver
+from JFA import jfa_solver_2D
 
 
 ti.init()
 
 
 @ti.data_oriented
-class cvt_lloyd_solver:
+class cvt_lloyd_solver_2D:
     def __init__(self, width, height, init_sites):
         # (x,y) denotes the coordinates of centroid
         # z is the auxiliary component to record the number of pixel in current voronoi region
         self.centroids = ti.Vector(3, dt=ti.f32, shape=init_sites.shape[0])
         # since jfa_solver will use from_numpy()
         # it must be put after all taichi variables
-        self.jfa = jfa_solver(width, height, init_sites)
+        self.jfa = jfa_solver_2D(width, height, init_sites)
 
-    def solve_cvt(self):
+    def solve_cvt(self, m=5):
         step_x = int(np.power(2, np.ceil(np.log(self.jfa.w))))
         step_y = int(np.power(2, np.ceil(np.log(self.jfa.h))))
         iteration = 0
@@ -27,6 +27,9 @@ class cvt_lloyd_solver:
             if self.cvt_convergence_check() == 1:
                 break
             self.jfa.assign_sites(self.centroids)
+            # Using 2 * maximum average distance as the jfa step for the first m iteration
+            if iteration <= m:
+                pass
             iteration += 1
         print("iteration times:", iteration)
 
