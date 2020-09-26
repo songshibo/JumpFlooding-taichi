@@ -1,7 +1,7 @@
 import numpy as np
 import taichi as ti
 import time as time
-from JFA import JumpFlooding
+from JFA_old import JumpFlooding
 
 ti.init(arch=ti.gpu, debug=True, kernel_profiler=True)
 
