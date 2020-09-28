@@ -48,8 +48,8 @@ class jfa_solver_2D:
                 jy = j+y*step_y
                 if 0 <= ix < self.w and 0 <= jy < self.h:
                     if self.pixels[ix, jy] != -1:
-                        dist = ts.distance(ts.vec(i/self.w, j/self.h), ts.vec(
-                            self.sites[self.pixels[ix, jy]]))
+                        dist = ts.distance(ts.vec(i/self.w, j/self.h),
+                                           self.sites[self.pixels[ix, jy]])
                         if dist < min_distance:
                             min_distance = dist
                             min_index = self.pixels[ix, jy]

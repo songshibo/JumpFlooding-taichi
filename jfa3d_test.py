@@ -32,4 +32,6 @@ while gui.running:
 
     jfa3d.debug_slice(screen, info, z_index)
     gui.set_image(screen)
+    gui.text("slice:(:,:,"+str(z_index)+")", (0.05, 0.95),
+             font_size=20, color=0xFFFFFF)
     gui.show()
