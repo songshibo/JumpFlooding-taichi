@@ -44,9 +44,7 @@ jfa2d.jfa_step(step_x, step_y)
 jfa3d.jfa_step(step_x, step_y, step_z)
 ```
 
-* ```screen```: 
-  * 2D:```ti.field(shape=(w,h,3))``` , where 3 is for ```(r,g,b)``` channels. 
-  * 3D:```ti.field(shape=(w,h,l,3))```.
+* ```screen```: ```ti.field(shape=(w,h,3))``` , where 3 is for ```(r,g,b)``` channels. 
 * ```site_info```: a numpy array holds other information of all sites. (ie. color).
 * ```step_x```,```step_y```,```step_z``` : Step size of each JFA pass(assigned manually).
 
