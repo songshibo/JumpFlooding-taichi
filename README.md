@@ -61,7 +61,7 @@ cvt_solver.jfa.render_color(screen, site_info)
 ```
 
 * parameters are similar to ```jfa_solver_2d```
-* ```solve_cvt()``` will use ![](http://latex.codecogs.com/gif.latex?\\(2^{\lceil\log{width} \rceil}, 2^{\lceil\log{height} \rceil})) as initial step size.
+* ```solve_cvt()``` will use ![](http://latex.codecogs.com/gif.latex?\dpi{100}(2^{\lceil\log{width}\rceil},2^{\lceil\log{height}\rceil})) as initial step size.
 * Call the function ```render_color``` of member variable ```jfa``` of ```cvt_lloyd_solver_2d```  to output the result.
 
 ## Performance
