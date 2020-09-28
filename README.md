@@ -74,7 +74,7 @@ cvt_solver.jfa.render_color(screen, site_info)
 
 3D JFA: 512x512x512, 50 sites, initial step size=(256,256,256).
 
-<img src="./outputs/video.gif" alt="jfa" style="zoom:50%;" />
+![](./outputs/video.gif)
 
 Each slice of the result (3D texture) is shown as GIF above.(shifting z index from 0 to 511)
 
