@@ -68,9 +68,7 @@ cvt_solver.jfa.render_color(screen, site_info)
 
 2D JFA & CVT: 512x512, 100 sites, initial step size=(128,128)
 
-<img src="./outputs/jfa_output.png" alt="jfa" style="zoom:50%;" />
-
-<img src="./outputs/cvt_output.png" alt="jfa" style="zoom:50%;" />
+<img src="./outputs/jfa_output.png" alt="jfa" style="zoom: 67%;" /><img src="./outputs/cvt_output.png" alt="cvt" style="zoom: 67%;" />
 
 3D JFA: 512x512x512, 50 sites, initial step size=(256,256,256).
 
