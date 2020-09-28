@@ -20,7 +20,7 @@ jfa2d = jfa_solver_2D(width, height, sites)
 jfa2d.solve_jfa(init_step)
 ```
 
-* ```init_step``` (tuple) the initial step length of JFA. Usually,``` init_step``` is ![](http://latex.codecogs.com/gif.latex?(\frac{width}{2},\frac{height}{2})). To reduce the computation time incurred by unnecessary JFA passes, ```init_step``` can be set to ![](http://latex.codecogs.com/gif.latex?(2^{\lceil\log{width} \rceil}, 2^{\lceil\log{height} \rceil})).
+* ```init_step``` (tuple) the initial step length of JFA. Usually,``` init_step``` is ![](http://latex.codecogs.com/gif.latex?(\frac{width}{2},\frac{height}{2})). To reduce the computation time incurred by unnecessary JFA passes, ```init_step``` can be set to  ![](http://latex.codecogs.com/gif.latex?\\(2^{\lceil\log{width} \rceil}, 2^{\lceil\log{height} \rceil})).
 
 **3D JFA solver**
 
@@ -61,7 +61,7 @@ cvt_solver.jfa.render_color(screen, site_info)
 ```
 
 * parameters are similar to ```jfa_solver_2d```
-* ```solve_cvt()``` will use![](http://latex.codecogs.com/gif.latex?(2^{\lceil\log{width} \rceil}, 2^{\lceil\log{height} \rceil})) as initial step size.
+* ```solve_cvt()``` will use ![](http://latex.codecogs.com/gif.latex?\\(2^{\lceil\log{width} \rceil}, 2^{\lceil\log{height} \rceil})) as initial step size.
 * Call the function ```render_color``` of member variable ```jfa``` of ```cvt_lloyd_solver_2d```  to output the result.
 
 ## Performance
