@@ -20,7 +20,7 @@ jfa2d = jfa_solver_2D(width, height, sites)
 jfa2d.solve_jfa(init_step)
 ```
 
-* ```init_step``` (tuple) the initial step length of JFA. Usually,``` init_step``` is ![](http://latex.codecogs.com/gif.latex?(\frac{width}{2},\frac{height}{2})). To reduce the computation time incurred by unnecessary JFA passes, ```init_step``` can be set to  ![](http://latex.codecogs.com/gif.latex?\\(2^{\lceil\log{width} \rceil}, 2^{\lceil\log{height} \rceil})).
+* ```init_step``` (tuple) the initial step length of JFA. Usually,``` init_step``` is ![](http://latex.codecogs.com/gif.latex?(\frac{width}{2},\frac{height}{2})). To reduce the computation time incurred by unnecessary JFA passes, ```init_step``` can be set to  ![](http://latex.codecogs.com/gif.latex?\dpi{100}(2^{\lceil\log{width}\rceil},2^{\lceil\log{height}\rceil})).
 
 **3D JFA solver**
 
