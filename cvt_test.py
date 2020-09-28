@@ -5,10 +5,11 @@ from CVT_Lloyd import cvt_lloyd_solver_2D
 
 ti.init(arch=ti.gpu, kernel_profiler=True)
 
-w = 256
-h = 256
+w = 512
+h = 512
 step = (int(np.power(2, np.ceil(np.log(w)))),
         int(np.power(2, np.ceil(np.log(h)))))
+print(step)
 screen = ti.Vector(3, dt=ti.f32, shape=(w, h))
 seeds = np.array(np.random.rand(100, 2), dtype=np.float32)
 seeds_info = np.array(np.random.rand(100, 3), dtype=np.float32)
@@ -16,13 +17,16 @@ info = ti.Vector(3, dt=ti.f32, shape=seeds_info.shape[0])
 cvt_solver = cvt_lloyd_solver_2D(w, h, seeds)
 info.from_numpy(seeds_info)
 
-cvt_solver.jfa.solve_jfa(step)
-cvt_solver.jfa.render_color(screen, info)
-ti.imwrite(screen.to_numpy(), './outputs/jfa_output.png')
+# cvt_solver.jfa.solve_jfa(step)
+# cvt_solver.jfa.render_color(screen, info)
+# ti.imwrite(screen.to_numpy(), './outputs/jfa_output.png')
+
 
 cvt_solver.solve_cvt()
 cvt_solver.jfa.render_color(screen, info)
 ti.imwrite(screen.to_numpy(), './outputs/cvt_output.png')
+
+ti.kernel_profiler_print()
 # auto_cvt_lloyd = False
 # gui = ti.GUI("JFA_test", (w, h))
 # while gui.running:
