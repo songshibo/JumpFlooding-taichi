@@ -9,7 +9,6 @@ w = 512
 h = 512
 step = (int(np.power(2, np.ceil(np.log(w)))),
         int(np.power(2, np.ceil(np.log(h)))))
-print(step)
 screen = ti.Vector(3, dt=ti.f32, shape=(w, h))
 seeds = np.array(np.random.rand(100, 2), dtype=np.float32)
 seeds_info = np.array(np.random.rand(100, 3), dtype=np.float32)
@@ -20,7 +19,6 @@ info.from_numpy(seeds_info)
 cvt_solver.jfa.solve_jfa(step)
 cvt_solver.jfa.render_color(screen, info)
 ti.imwrite(screen.to_numpy(), './outputs/jfa_output.png')
-
 
 cvt_solver.solve_cvt()
 cvt_solver.jfa.render_color(screen, info)

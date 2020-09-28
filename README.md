@@ -106,6 +106,8 @@ Environment: Intel i7 9700K (CPU 3.6 GHZ) and NVidia RTX 2060 SUPER GPU
   =========================================================================
   ```
 
+  Actual computation time: 0.997ms
+
 * 512x512 CVT, 100 sites, initial step size=(128,128)
 
   ```
@@ -136,6 +138,8 @@ Environment: Intel i7 9700K (CPU 3.6 GHZ) and NVidia RTX 2060 SUPER GPU
   =========================================================================
   ```
 
+  Time: 0.236s (without using the scheme [GPU-CVT](https://personal.utdallas.edu/~xxg061000/GPU-CVT.pdf) described in Sec.3.1 to further improve the JFA performance).
+
 * 512x512x512 JFA3D, 50 sites, initial step size=(256,256,256).
 
   ```
@@ -155,11 +159,13 @@ Environment: Intel i7 9700K (CPU 3.6 GHZ) and NVidia RTX 2060 SUPER GPU
   =========================================================================
   ```
 
-  
+  Time: 0.864ms
 
 # Reference
 
 [Jump flooding in GPU with applications to Voronoi diagram and distance transform](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.101.8568&rep=rep1&type=pdf)
 
 [GPU-Assisted Computation of Centroidal Voronoi Tessellation](https://personal.utdallas.edu/~xxg061000/GPU-CVT.pdf)
+
+[Variants of Jump Flooding Algorithm for Computing Discrete Voronoi Diagrams](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=4276119)
 
