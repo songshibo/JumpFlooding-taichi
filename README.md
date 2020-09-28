@@ -64,13 +64,27 @@ cvt_solver.jfa.render_color(screen, site_info)
 * ```solve_cvt()``` will use ![](http://latex.codecogs.com/gif.latex?\dpi{100}(2^{\lceil\log{width}\rceil},2^{\lceil\log{height}\rceil})) as initial step size.
 * Call the function ```render_color``` of member variable ```jfa``` of ```cvt_lloyd_solver_2d```  to output the result.
 
+## Results
+
+2D JFA & CVT: 512x512, 100 sites, initial step size=(128,128)
+
+<img src="./outputs/jfa_output.png" alt="jfa" style="zoom:50%;" />
+
+<img src="./outputs/cvt_output.png" alt="jfa" style="zoom:50%;" />
+
+3D JFA: 512x512x512, 50 sites, initial step size=(256,256,256).
+
+<img src="./outputs/video.gif" alt="jfa" style="zoom:50%;" />
+
+Each slice of the result (3D texture) is shown as GIF above.(shifting z index from 0 to 511)
+
 ## Performance
 
 I use [Taichi KernelProfiler](https://taichi.readthedocs.io/en/stable/profiler.html) to output the CUDA Profiler.
 
 Environment: Intel i7 9700K (CPU 3.6 GHZ) and NVidia RTX 2060 SUPER GPU
 
-* 512x512 JFA, 100 sites, initial  step size=(128,128)
+* 512x512 JFA, 100 sites, initial step size=(128,128)
 
   ```
   CUDA Profiler
@@ -119,6 +133,25 @@ Environment: Intel i7 9700K (CPU 3.6 GHZ) and NVidia RTX 2060 SUPER GPU
   [  0.01%   0.000 s      1x |    0.017     0.017     0.017 ms] ext_arr_to_matrix_c36_1_kernel_1_range_for
   -------------------------------------------------------------------------
   [100.00%] Total kernel execution time:   0.332 s   number of records: 18
+  =========================================================================
+  ```
+
+* 512x512x512 JFA3D, 50 sites, initial step size=(256,256,256).
+
+  ```
+  CUDA Profiler
+  =========================================================================
+  [      %     total   count |      min       avg       max   ] Kernel name
+  [ 89.95%   0.863 s      9x |   30.492    95.936   157.981 ms] jfa_step_c14_0_kernel_4_range_for
+  [  9.88%   0.095 s      1x |   94.821    94.821    94.821 ms] runtime_initialize
+  [  0.15%   0.001 s      1x |    1.418     1.418     1.418 ms] init_sites_c12_0_kernel_2_range_for
+  [  0.01%   0.000 s     12x |    0.006     0.008     0.016 ms] runtime_retrieve_and_reset_error_code
+  [  0.01%   0.000 s      1x |    0.059     0.059     0.059 ms] runtime_initialize2
+  [  0.00%   0.000 s      1x |    0.016     0.016     0.016 ms] ext_arr_to_matrix_c32_0_kernel_0_range_for
+  [  0.00%   0.000 s      1x |    0.008     0.008     0.008 ms] init_sites_c12_0_kernel_3_range_for
+  [  0.00%   0.000 s      1x |    0.007     0.007     0.007 ms] ext_arr_to_matrix_c32_1_kernel_1_range_for
+  -------------------------------------------------------------------------
+  [100.00%] Total kernel execution time:   0.960 s   number of records: 8
   =========================================================================
   ```
 

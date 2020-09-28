@@ -17,16 +17,16 @@ info = ti.Vector(3, dt=ti.f32, shape=seeds_info.shape[0])
 cvt_solver = cvt_lloyd_solver_2D(w, h, seeds)
 info.from_numpy(seeds_info)
 
-# cvt_solver.jfa.solve_jfa(step)
-# cvt_solver.jfa.render_color(screen, info)
-# ti.imwrite(screen.to_numpy(), './outputs/jfa_output.png')
+cvt_solver.jfa.solve_jfa(step)
+cvt_solver.jfa.render_color(screen, info)
+ti.imwrite(screen.to_numpy(), './outputs/jfa_output.png')
 
 
 cvt_solver.solve_cvt()
 cvt_solver.jfa.render_color(screen, info)
 ti.imwrite(screen.to_numpy(), './outputs/cvt_output.png')
 
-ti.kernel_profiler_print()
+# ti.kernel_profiler_print()
 # auto_cvt_lloyd = False
 # gui = ti.GUI("JFA_test", (w, h))
 # while gui.running:
