@@ -20,7 +20,7 @@ jfa2d = jfa_solver_2D(width, height, sites)
 jfa2d.solve_jfa(init_step)
 ```
 
-* ```init_step``` (tuple) the initial step length of JFA. Usually,``` init_step``` is ![](http://latex.codecogs.com/gif.latex?(\frac{width}{2},\frac{height}{2})). To reduce the computation time incurred by unnecessary JFA passes, ```init_step``` can be set to  ![](http://latex.codecogs.com/gif.latex?\dpi{100}(2^{\lceil\log{width}\rceil},2^{\lceil\log{height}\rceil})).
+* ```init_step``` (tuple) the initial step length of JFA. Usually,``` init_step``` is ![](http://latex.codecogs.com/gif.latex?\dpi{100}(\frac{width}{2},\frac{height}{2})). To reduce the computation time incurred by unnecessary JFA passes, ```init_step``` can be set to  ![](http://latex.codecogs.com/gif.latex?\dpi{100}(2^{\lceil\log{width}\rceil},2^{\lceil\log{height}\rceil})).
 
 **3D JFA solver**
 
@@ -46,7 +46,7 @@ jfa3d.jfa_step(step_x, step_y, step_z)
 
 * ```screen```: ```ti.field(shape=(w,h,3))``` , where 3 is for ```(r,g,b)``` channels. 
 * ```site_info```: a numpy array holds other information of all sites. (ie. color).
-* ```step_x```,```step_y```,```step_z``` : Step size of each JFA pass(assigned manually).
+* ```step_x```,```step_y```,```step_z``` : step size of each JFA pass(assigned manually).
 
 **2D CVT solver**
 
@@ -80,7 +80,7 @@ Each slice of the result (3D texture) is shown as GIF above.(shifting z index fr
 
 I use [Taichi KernelProfiler](https://taichi.readthedocs.io/en/stable/profiler.html) to output the detailed statistics.
 
-Environment: Intel i7 9700K (CPU 3.6 GHZ) and NVidia RTX 2060 SUPER GPU
+Environment: Intel i7 9700K CPU (3.6 GHZ) and NVidia RTX 2060 SUPER GPU
 
 * 512x512 JFA, 100 sites, initial step size=(128,128)
 
@@ -157,7 +157,7 @@ Environment: Intel i7 9700K (CPU 3.6 GHZ) and NVidia RTX 2060 SUPER GPU
   =========================================================================
   ```
 
-  Time: 0.864ms
+  Time: 0.864s
 
 # Reference
 
