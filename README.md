@@ -1,4 +1,4 @@
-# JFA & CVT using [Taichi](https://github.com/taichi-dev/taichi) Programming Language
+# JFA & CVT using [Taichi Programming Language](https://github.com/taichi-dev/taichi)
 
 2D/3D Voronoi tessellation using Jump Flooding algorithm(JFA). Adopt 1+JFA strategy to reduce errors.
 
@@ -80,7 +80,7 @@ Each slice of the result (3D texture) is shown as GIF above.(shifting z index fr
 
 ## Performance
 
-I use [Taichi KernelProfiler](https://taichi.readthedocs.io/en/stable/profiler.html) to output the CUDA Profiler.
+I use [Taichi KernelProfiler](https://taichi.readthedocs.io/en/stable/profiler.html) to output the detailed statistics.
 
 Environment: Intel i7 9700K (CPU 3.6 GHZ) and NVidia RTX 2060 SUPER GPU
 
