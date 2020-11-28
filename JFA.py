@@ -77,6 +77,14 @@ class jfa_solver_2D:
             else:
                 screen[I].fill(-1)
 
+    @ti.kernel
+    def render_index(self, screen: ti.template()):
+        for I in ti.grouped(screen):
+            if self.pixels[I] != -1:
+                screen[I].fill(self.pixels[I] / self.num_site)
+            else:
+                screen[I].fill(-1)
+
     def debug_sites(self):
         seed_np = self.sites.to_numpy()
         return seed_np[:self.num_site]
@@ -148,3 +156,35 @@ class jfa_solver_3D:
                 screen[i, j] = site_info[self.pixels[i, j, slice]]
             else:
                 screen[i, j].fill(-1)
+
+
+@ti.data_oriented
+class jfa_solver_2D_seamless:
+    def __init__(self, width, height, init_sites):
+        self.w = width
+        self.h = height
+        expand_site = init_sites
+        for x, y in ti.ndrange((0, 3), (0, 3)):
+            if(x != 0 or y != 0):
+                expand_site = np.concatenate(
+                    (expand_site, init_sites + [x, y]))
+        # additional cast, prevent losing precision
+        self.jfa = jfa_solver_2D(
+            width * 3, height * 3, (expand_site / 3).astype(np.float32))
+
+    def solve_jfa_seamless(self):
+        init_step = (int(np.power(2, np.ceil(np.log(3 * self.w)))),
+                     int(np.power(2, np.ceil(np.log(3 * self.h)))))
+        self.jfa.solve_jfa(init_step)
+
+    @ ti.kernel
+    def render_distance(self, screen: ti.template()):
+        for I in ti.grouped(screen):
+            pixel_coord = I + [self.w, self.h]
+            if self.jfa.pixels[pixel_coord] != -1:
+                index = self.jfa.pixels[pixel_coord]
+                site_coord = self.jfa.sites[index]
+                screen[I].fill(1 - ts.distance(
+                    pixel_coord / [self.w, self.h], site_coord * 3))
+            else:
+                screen[I].fill(-1)

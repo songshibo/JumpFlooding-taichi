@@ -17,7 +17,8 @@ cvt_solver = cvt_lloyd_solver_2D(w, h, seeds)
 info.from_numpy(seeds_info)
 
 cvt_solver.jfa.solve_jfa(step)
-cvt_solver.jfa.render_color(screen, info)
+# cvt_solver.jfa.render_color(screen, info)
+cvt_solver.jfa.render_index(screen)
 ti.imwrite(screen.to_numpy(), './outputs/jfa_output.png')
 
 cvt_solver.solve_cvt()
