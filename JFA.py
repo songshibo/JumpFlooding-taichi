@@ -185,6 +185,6 @@ class jfa_solver_2D_seamless:
                 index = self.jfa.pixels[pixel_coord]
                 site_coord = self.jfa.sites[index]
                 screen[I].fill(1 - ts.distance(
-                    pixel_coord / [self.w, self.h], site_coord * 3))
+                    pixel_coord / [self.w, self.h], site_coord * 3)/0.5)
             else:
                 screen[I].fill(-1)
