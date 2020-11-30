@@ -161,6 +161,8 @@ class jfa_solver_3D:
 @ti.data_oriented
 class jfa_solver_2D_seamless:
     def __init__(self, width, height, init_sites):
+        self.min_dist = ti.field(dtype=ti.f32, shape=())
+        self.max_dist = ti.field(dtype=ti.f32, shape=())
         self.w = width
         self.h = height
         expand_site = init_sites
@@ -177,6 +179,18 @@ class jfa_solver_2D_seamless:
                      int(np.power(2, np.ceil(np.log(3 * self.h)))))
         self.jfa.solve_jfa(init_step)
 
+    @ti.kernel
+    def compute_min_max_distance(self, screen: ti.template()):
+        self.min_dist = 100000.0
+        self.max_dist = -100000.0
+        for I in ti.grouped(screen):
+            pixel_coord = I + [self.w, self.h]
+            index = self.jfa.pixels[pixel_coord]
+            dist = ts.distance(
+                pixel_coord / [self.w, self.h], self.jfa.sites[index] * 3)
+            self.min_dist = dist if dist < self.min_dist else self.min_dist
+            self.max_dist = dist if dist > self.max_dist else self.max_dist
+
     @ ti.kernel
     def render_distance(self, screen: ti.template()):
         for I in ti.grouped(screen):
@@ -184,7 +198,10 @@ class jfa_solver_2D_seamless:
             if self.jfa.pixels[pixel_coord] != -1:
                 index = self.jfa.pixels[pixel_coord]
                 site_coord = self.jfa.sites[index]
-                screen[I].fill(1 - ts.distance(
-                    pixel_coord / [self.w, self.h], site_coord * 3)/0.5)
+                dist = ts.distance(
+                    pixel_coord / [self.w, self.h], site_coord * 3)
+                dist = (dist - self.min_dist[None]) / \
+                    (self.max_dist[None]-self.min_dist[None])
+                screen[I].fill(1 - dist)
             else:
                 screen[I].fill(-1)

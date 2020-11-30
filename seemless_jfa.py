@@ -9,12 +9,13 @@ w = 512
 h = 512
 
 screen = ti.Vector(3, dt=ti.f32, shape=(w, h))
-seeds = np.array(np.random.rand(10, 2), dtype=np.float32)
+seeds = np.array(np.random.rand(100, 2), dtype=np.float32)
 
 jfa_seamless = jfa_solver_2D_seamless(w, h, seeds)
 
 gui = ti.GUI("JFA_test", (w, h))
 jfa_seamless.solve_jfa_seamless()
+jfa_seamless.compute_min_max_distance(screen)
 jfa_seamless.render_distance(screen)
 ti.imwrite(screen.to_numpy(), './outputs/jfa_output_seemless.png')
 while gui.running:
